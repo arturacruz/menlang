@@ -32,7 +32,7 @@ Men Lang é uma linguagem pensada para se assimilar ao diálogo tradicional paul
 <endblock>          ::= "ne"
 <identifier>        ::= <letter> {( <letter> | <digit> | "_" )}
 <boolean>           ::= "bizarro" | "certeza" | "depende"
-<number>            ::= [ <un-op> ] <digit> { <digit> }
+<number>            ::= <digit> { <digit> }
 <letter>            ::= "a".."z" | "A".."Z"
 <digit>             ::= "0".."9"
 ```
