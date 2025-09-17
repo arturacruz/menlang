@@ -1,16 +1,22 @@
 # Men Lang
 
+Men Lang é uma linguagem pensada para se assimilar ao diálogo tradicional paulistano da Faria Lima, mais conhecido como "menzinho".
+
 ### EBNF
 
 ```ebnf
 <program>           ::= { <statement> }
-<statement>         ::= {( <declaration> | <print> | <conditional> | <conditional-loop> )}
+<statement>         ::= {( <declaration> 
+                      | <print> 
+                      | <conditional> 
+                      | <conditional-loop> 
+                      | <increment> )}
 <declaration>       ::= ( "literal" | "literalmente" ), <identifier>, "eh", <expr>, <endline>
 <conditional>       ::= "se", <expr>, <no-endblock> {("se" <else-conditional>)} [ <else-conditional> ] "ne"
 <conditional-loop>  ::= "grind", "ate", <expr>, <block>
 <else-conditional>  ::= "pah", <no-endblock>
-<un-op>             ::= "mais" | "menos" | <increment>
-<increment>         ::= ("win" | "W") | ("loss" | "L") 
+<un-op>             ::= "mais" | "menos"
+<increment>         ::= <identifier> (("win" | "W") | ("loss" | "L")) <endline>
 <bool-un-op>        ::= "não"
 <bool-bin-op>       ::= "e" | "ou" | "eh"
 <bin-op>            ::= <un-op> | "divide" | "vezes" | <bool-bin-op> | <bool-un-op>
@@ -58,4 +64,8 @@ Output:
 3
 1
 ```
+
+# Investment VM
+
+A InVM será baseada em investimentos, alta, baixa, venda e compra de ações.
 
