@@ -6,7 +6,6 @@ A InVM (ou Investment VM) será baseada na lógica de investimentos: alta, baixa
 
 Todos são registradores i32.
 
-- `BALANCE`: Contém o capital atual.
 - `FUND1`: Contém o dinheiro investido na StartUp 1.
 - `FUND2`: Contém o dinheiro investido na StartUp 2.
 
@@ -30,6 +29,7 @@ Estes sensores só descrevem a situação atual.
 - `MARKETVAL`: Valor total de dinheiro no mercado. Efetivamente, `SHARES` * `STOCKPRICE`.
 - `EQUITY`: Valor de todas as *shares* do usuário. Efetivamente, `OWNED` * `STOCKPRICE`.
 - `OWNED`: Contém quantas *shares* são possuídas pelo usuário no mercado. Começa em 0.
+- `BALANCE`: Contém o capital atual. Começa em `10000` e aumenta em `100` toda operação.
 
 # Men Lang
 
