@@ -8,8 +8,6 @@ Men Lang é uma linguagem pensada para se assimilar ao diálogo tradicional paul
 program        = { statement };
 statement      = {( declaration
                | print
-               | conditional
-               | conditional_loop
                | increment )};
 declaration    = ( "literal" | "literalmente" ), identifier, "eh", expr, endline;
 un_op          = "mais" | "menos";
