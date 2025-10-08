@@ -6,7 +6,7 @@ pub enum Register {
     Fund1, Fund2
 }
 
-enum Sensors {
+pub enum Sensor {
     Shares, 
     Stockprice,
     Reputation,
@@ -18,7 +18,7 @@ enum Sensors {
 
 struct InvestmentVM {
     registers: HashMap<Register, i32>,
-    sensors: HashMap<Sensors, i32>,
+    sensors: HashMap<Sensor, i32>,
     program: Vec<Instruction>,
     labels: HashMap<String, usize>,
     pc: usize,
