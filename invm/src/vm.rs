@@ -64,7 +64,7 @@ impl VM {
         VM {
             registers: HashMap::new(),
             sensors: Self::init_sensors(),
-            labels: Self::init_labels(&program),
+            labels: HashMap::new(),
             pc: 0,
             program,
             stack: Stack::new(),
@@ -84,19 +84,12 @@ impl VM {
         sensors
     }
 
-    fn init_labels(lines: &[Instruction]) -> HashMap<String, usize> {
-        let mut labels = HashMap::new();
-
-        for (i, inst) in lines.iter().enumerate() {
-            if let Instruction::DeclareLabel(s) = inst {
-                if labels.contains_key(s) {
-                    panic!("[INVM] Duplicate label {s}.")
-                }
-                labels.insert(s.to_string(), i);
-            }
+    fn init_label(&mut self, label: String) {
+        if self.labels.contains_key(&label) {
+            panic!("[INVM] Duplicate label {label}.")
         }
 
-        labels
+        self.labels.insert(label, self.pc);
     }
 
     fn expect_register_value(&mut self, reg: &Register) -> i32 {
@@ -132,7 +125,7 @@ impl VM {
             Instruction::Crash => self.crash(),
             Instruction::Buy(amount) => self.buy(amount),
             Instruction::Sell(amount) => self.sell(amount),
-            Instruction::DeclareLabel(_) => (),
+            Instruction::DeclareLabel(label) => self.init_label(label),
         }
         self.pc += 1;
         self.simulate();
