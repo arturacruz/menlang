@@ -35,9 +35,11 @@ Estes sensores só descrevem a situação atual.
 
 | Instrução   | Sintaxe         | Descrição                                                                         | Exemplo               |
 |-------------|-----------------|-----------------------------------------------------------------------------------|-----------------------|
-| **SET**     | `SET R n`       | Coloca o valor n em R                                                             | `SET S1 10`           |
+| **SET**     | `SET R n`       | Coloca o valor n em R                                                             | `SET FUND1 10`           |
 | **ADD**     | `ADD R1/n R2`   | Adiciona e guarda um valor em R2                                                  | `ADD 1 FUND1`         |
 | **SUB**     | `SUB R1/n R2`   | Subtrai e guarda um valor em R2                                                   | `SUB 1 FUND2`         |
+| **MULT**     | `MULT R1/n R2`   | Multipla R2 por um valor (inteiro) e guarda em si mesmo.         | `MULT 1 FUND1`         |
+| **DIV**     | `DIV R1/n R2`   | Divide R2 por um valor (inteiro) e guarda em si mesmo.             | `DIV 1 FUND2`         |
 | **GOTO**    | `GOTO label`    | Pula para a label                                                                 | `GOTO loop`           |
 | **GOTOZ**   | `GOTOZ R/n label` | Pula para a label se R ou n for 0                                                      | `GOTOZ S1 loop`       |
 | **PRINT**   | `PRINT R/n`       | Printa o valor atual do registrador                                               | `PRINT BALANCE`       |
