@@ -19,14 +19,24 @@ pub enum Instruction {
     Mult(GeneralRegister, Register),
     Div(GeneralRegister, Register),
     Goto(String),
-    Gotoz(GeneralRegister, String),
-    Print(GeneralRegister),
+    GoIf(Condition, GeneralRegister, String),
+    Print(GeneralRegister, Type),
     Push(GeneralRegister),
     Pop(Register),
     Crash,
     Buy(i32),
     Sell(i32),
     DeclareLabel(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Type {
+    Int, Bool, Char
+}
+
+#[derive(Debug, Clone)]
+pub enum Condition {
+    Equals, Different, Greater, Lesser, GreaterOrEqual, LesserOrEqual
 }
 
 #[derive(Debug, Clone)]
@@ -154,8 +164,8 @@ impl VM {
             Instruction::Mult(v, r) => self.mult(v, r),
             Instruction::Div(v, r) => self.div(v, r),
             Instruction::Goto(label) => self.goto(label),
-            Instruction::Gotoz(val, label) => self.gotoz(val, label),
-            Instruction::Print(val) => self.print(val),
+            Instruction::GoIf(cond, val, label) => self.go_if(cond, val, label),
+            Instruction::Print(val, t) => self.print(val, t),
             Instruction::Push(val) => self.push(val),
             Instruction::Pop(reg) => self.pop(reg),
             Instruction::Crash => self.crash(),
@@ -255,18 +265,30 @@ impl VM {
         self.pc = self.expect_label(&label);
     }
 
-    fn gotoz(&mut self, gr: GeneralRegister, label: String) {
+    fn go_if(&mut self, cond: Condition, gr: GeneralRegister, label: String) {
         let val = self.expect_general_reg(gr);
 
-        if val == 0 {
+        let c = match cond {
+            Condition::Equals => val == 0,
+            Condition::Different => val != 0,
+            Condition::Lesser => val < 0,
+            Condition::Greater => val > 0,
+            Condition::GreaterOrEqual => val >= 0,
+            Condition::LesserOrEqual => val <= 0,
+        };
+
+        if c {
             self.goto(label);
         }
     }
 
-    fn print(&mut self, gr: GeneralRegister) {
+    fn print(&mut self, gr: GeneralRegister, t: Type) {
         let val = self.expect_general_reg(gr);
-
-        println!("{val}");
+        match t {
+            Type::Int => println!("{val}"),
+            Type::Bool => println!("{}", val != 0),
+            Type::Char => println!("{}", (val % 256) as u8 as char),
+        }
     }
 
     fn push(&mut self, gr: GeneralRegister) {

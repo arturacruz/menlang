@@ -1,17 +1,19 @@
 use std::{iter::Peekable, panic, str::Chars};
 
-use crate::vm::{Register, Sensor};
+use crate::vm::{Register, Sensor, Type};
 
 #[derive(Debug)]
 pub enum Token {
     Value(i32),
     Reg(Register),
     Sens(Sensor),
-    Set, Add, Sub, Goto, Gotoz, Print, Push, Pop, Buy, Sell, Crash, Mult, Div,
+    Set, Add, Sub, Goto, GoIf, Print, Push, Pop, Buy, Sell, Crash, Mult, Div,
     LabelDeclare(String),
     Label(String),
     Reference,
-    Endline
+    Endline,
+    Type(Type),
+    Equals, Different, Greater, Lesser, GreaterOrEqual, LesserOrEqual
 }
 
 pub struct Lexer<'a> {
@@ -48,7 +50,7 @@ impl<'a> Lexer<'a> {
             "MULT" => Token::Mult,
             "DIV" => Token::Div,
             "GOTO" => Token::Goto,
-            "GOTOZ" => Token::Gotoz,
+            "GOIF" => Token::GoIf,
             "PRINT" => Token::Print,
             "PUSH" => Token::Push,
             "POP" => Token::Pop,
@@ -64,7 +66,10 @@ impl<'a> Lexer<'a> {
             "EQUITY" => Token::Sens(Sensor::Equity),
             "OWNED" => Token::Sens(Sensor::Owned),
             "BALANCE" => Token::Sens(Sensor::Balance),
-            _ => panic!("[Lexer] Unknown instruction or register: {s}.")
+            "char" => Token::Type(Type::Char),
+            "int" => Token::Type(Type::Int),
+            "bool" => Token::Type(Type::Bool),
+            _ => panic!("[Lexer] Unknown instruction, type or register: {s}.")
         }
     }
 
@@ -103,6 +108,7 @@ impl<'a> Lexer<'a> {
             self.source.next();
         }
     }
+
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -118,6 +124,26 @@ impl<'a> Iterator for Lexer<'a> {
                 '$' => return Some(self.parse_label()),
                 '*' => return Some(Token::Reference),
                 ':' => panic!("[Lexer] Empty label identifier."),
+                '<' => match self.source.next() {
+                    Some('=') => return Some(Token::LesserOrEqual),
+                    Some(' ') | None => return Some(Token::Lesser),
+                    Some(n) => panic!("[Lexer] Unknown condition <{n}.")
+                },
+                '>' => match self.source.next() {
+                    Some('=') => return Some(Token::GreaterOrEqual),
+                    Some(' ') | None => return Some(Token::Greater),
+                    Some(n) => panic!("[Lexer] Unknown condition >{n}.")
+                },
+                '=' => match self.source.next() {
+                    Some('=') => return Some(Token::Equals),
+                    Some(n) => panic!("[Lexer] Unknown condition ={n}."),
+                    None => panic!("[Lexer] Unknown condition =. Maybe you meant ==?")
+                },
+                '!' => match self.source.next() {
+                    Some('=') => return Some(Token::Different),
+                    Some(n) => panic!("[Lexer] Unknown condition !{n}."),
+                    None => panic!("[Lexer] Unknown condition !. Maybe you meant !=?")
+                },
                 '0'..='9' => return Some(self.parse_number(char)),
                 'a'..='z' | 'A'..='Z' => return Some(self.parse_keyword(char)),
                 _ => panic!("[Lexer] Invalid symbol: {char}.")

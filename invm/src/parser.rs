@@ -1,4 +1,4 @@
-use crate::{lexer::{Lexer, Token}, vm::{GeneralRegister, Instruction, Reference}};
+use crate::{lexer::{Lexer, Token}, vm::{Condition, GeneralRegister, Instruction, Reference}};
 
 struct Parser<'a> {
     lex: Lexer<'a>
@@ -40,7 +40,7 @@ impl<'a> Parser<'a> {
                 Token::Mult => self.mult(),
                 Token::Div => self.div(),
                 Token::Goto => self.goto(),
-                Token::Gotoz => self.gotoz(),
+                Token::GoIf => self.go_if(),
                 Token::Print => self.print(),
                 Token::Push => self.push(),
                 Token::Pop => self.pop(),
@@ -162,20 +162,30 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn gotoz(&mut self) -> Instruction {
+    fn go_if(&mut self) -> Instruction {
+        let cond = match self.lex.next() {
+            Some(Token::Equals) => Condition::Equals,
+            Some(Token::Greater) => Condition::Greater,
+            Some(Token::Lesser) => Condition::Lesser,
+            Some(Token::GreaterOrEqual) => Condition::GreaterOrEqual,
+            Some(Token::LesserOrEqual) => Condition::LesserOrEqual,
+            Some(Token::Different) => Condition::Different,
+            n => panic!("[Parser] Expected a Condition in GOIF instruction (GOIF COND R label), got {n:?}"),
+        };
+
         let reg = match self.lex.next() {
             Some(Token::Reg(r)) => GeneralRegister::Register(r),
             Some(Token::Value(n)) => GeneralRegister::Value(n),
             Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or value in GOTOZ instruction: GOTOZ R label."),
+            _ => panic!("[Parser] Expected a register or value in GOIF instruction: GOIF R label."),
         };
 
         let label = match self.lex.next() {
             Some(Token::Label(s)) => s,
-            _ => panic!("[Parser] Expected a label in GOTOZ instruction: GOTOZ R label.")
+            _ => panic!("[Parser] Expected a label in GOIF instruction: GOIF R label.")
         };
 
-        Instruction::Gotoz(reg, label)
+        Instruction::GoIf(cond, reg, label)
     }
 
     fn print(&mut self) -> Instruction {
@@ -183,9 +193,14 @@ impl<'a> Parser<'a> {
             Some(Token::Reg(r)) => GeneralRegister::Register(r),
             Some(Token::Value(n)) => GeneralRegister::Value(n),
             Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or value in PRINT instruction: PRINT R/n.")
+            _ => panic!("[Parser] Expected a register or value in PRINT instruction: PRINT R/n type.")
         };
-        Instruction::Print(val)
+
+        let t = match self.lex.next() {
+            Some(Token::Type(t)) => t,
+            _ => panic!("[Parser] Expected a type after PRINT instruction (PRINT R/n type).")
+        };
+        Instruction::Print(val, t)
     }
 
     fn push(&mut self) -> Instruction {
