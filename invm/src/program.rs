@@ -1,4 +1,6 @@
-use crate::vm::Register;
+use std::{fs::File, io::{self, BufRead, BufReader, Lines}};
+
+use crate::{lexer::Lexer, prepro, vm::Register};
 
 pub enum Instruction {
     Set(Register, i32),
@@ -14,8 +16,22 @@ pub enum Instruction {
     Sell(u32)
 }
 
-struct Program {
-    
+pub struct Program<'a> {
+    lex: Lexer<'a>,
+}
+
+impl<'a> Program<'a> {
+    pub fn new(query: &'a str) -> Self {
+        Program { lex: Lexer::new(query)  }
+    }
+
+    pub fn step(&mut self) -> Option<Instruction> {
+        let line = self.lex.next()?;
+        
+        Some(Instruction::Crash)
+    }
+
+
 }
 
 
