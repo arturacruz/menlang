@@ -1,5 +1,3 @@
-use std::slice::Iter;
-
 use crate::{lexer::{Lexer, Token}, vm::{GeneralRegister, Instruction}};
 
 struct Parser<'a> {
