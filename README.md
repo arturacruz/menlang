@@ -45,7 +45,7 @@ Estes sensores só descrevem a situação atual.
 | **POP**     | `POP R`         | Tira um valor do stack e coloca em R                                              | `POP FUND1`           |
 | **CRASH**   | `CRASH`         | Para o programa                                                                   | `CRASH`               |
 | **BUY**     | `BUY n`         | Compra n ações. Se `BALANCE` for menor do que `n * STOCKPRICE`, para o programa.  | `BUY 10`              | 
-| **SELL**    | `SELL n`        | Vende n ações. Se `SHARES` for menor do que `n`, para o programa.                 | `SELL 1`              | 
+| **SELL**    | `SELL n`        | Vende n ações. Se `OWNED` for menor do que `n`, para o programa.                 | `SELL 1`              | 
 
 # Men Lang
 
