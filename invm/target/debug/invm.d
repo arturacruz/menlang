@@ -1,1 +1,0 @@
-/home/artur/Dev/men/menlang/invm/target/debug/invm: /home/artur/Dev/men/menlang/invm/src/main.rs /home/artur/Dev/men/menlang/invm/src/program.rs /home/artur/Dev/men/menlang/invm/src/stack.rs /home/artur/Dev/men/menlang/invm/src/vm.rs
