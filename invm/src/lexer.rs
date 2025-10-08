@@ -2,6 +2,7 @@ use std::{iter::Peekable, panic, str::Chars};
 
 use crate::vm::{Register, Sensor};
 
+#[derive(Debug)]
 pub enum Token {
     Value(i32),
     Reg(Register),
@@ -82,6 +83,16 @@ impl<'a> Lexer<'a> {
             self.source.next();
         }
     }
+
+    // pub fn next_line(&mut self) -> Vec<Token> {
+    //     let mut line = vec![];
+    //     loop {
+    //         match self.next() {
+    //             Some(Token::Endline) | None => return line,
+    //             Some(s) => line.push(s),
+    //         }
+    //     }
+    // }
 }
 
 impl<'a> Iterator for Lexer<'a> {
