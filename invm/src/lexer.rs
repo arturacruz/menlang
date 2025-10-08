@@ -10,6 +10,7 @@ pub enum Token {
     Set, Add, Sub, Goto, Gotoz, Print, Push, Pop, Buy, Sell, Crash, Mult, Div,
     LabelDeclare(String),
     Label(String),
+    Reference,
     Endline
 }
 
@@ -115,6 +116,7 @@ impl<'a> Iterator for Lexer<'a> {
                 ' ' | '\t' => char = self.source.next()?,
                 '\n' => return Some(Token::Endline),
                 '$' => return Some(self.parse_label()),
+                '*' => return Some(Token::Reference),
                 ':' => panic!("[Lexer] Empty label identifier."),
                 '0'..='9' => return Some(self.parse_number(char)),
                 'a'..='z' | 'A'..='Z' => return Some(self.parse_keyword(char)),

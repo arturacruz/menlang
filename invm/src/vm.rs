@@ -13,7 +13,7 @@ pub fn run(query: &str) {
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
-    Set(Register, GeneralRegister),
+    Set(Reference, Reference),
     Add(GeneralRegister, Register),
     Sub(GeneralRegister, Register),
     Mult(GeneralRegister, Register),
@@ -26,14 +26,22 @@ pub enum Instruction {
     Crash,
     Buy(i32),
     Sell(i32),
-    DeclareLabel(String)
+    DeclareLabel(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Reference {
+    Register(Register),
+    Sensor(Sensor),
+    Value(i32),
+    Address(GeneralRegister)
 }
 
 #[derive(Debug, Clone)]
 pub enum GeneralRegister {
     Register(Register),
     Sensor(Sensor),
-    Value(i32)
+    Value(i32),
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -58,6 +66,7 @@ struct VM {
     labels: HashMap<String, usize>,
     pc: usize,
     program: Vec<Instruction>,
+    heap: [i32; 65535],
     stack: Stack,
     crash: bool
 }
@@ -71,6 +80,7 @@ impl VM {
             labels: Self::init_labels(&program),
             pc: 0,
             program,
+            heap: [0; 65535],
             stack: Stack::new(),
             crash: false
         }
@@ -196,9 +206,25 @@ impl VM {
 
     }
 
-    fn set(&mut self, reg: Register, gr: GeneralRegister) {
-        let val = self.expect_general_reg(gr);
-        self.registers.insert(reg, val);
+    fn set(&mut self, reg: Reference, reg2: Reference) {
+
+        let val = match reg2 {
+            Reference::Register(r) => self.expect_register_value(&r),
+            Reference::Sensor(s) => self.expect_sensor_value(&s),
+            Reference::Value(n) => n,
+            Reference::Address(gr) => self.heap[self.expect_general_reg(gr) as usize],
+        };
+        match reg {
+            Reference::Register(r) => { self.registers.insert(r, val); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(g);
+                if !(0..65535).contains(&v) {
+                    panic!("[INVM] Segmentation fault.");
+                }
+                self.heap[v as usize] = val;
+            }
+            _ => panic!("[INVM] Unable to modify readonly value {reg:?}.")
+        }
     }
 
     fn add(&mut self, gr: GeneralRegister, reg: Register) {

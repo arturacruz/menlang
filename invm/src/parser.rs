@@ -1,4 +1,4 @@
-use crate::{lexer::{Lexer, Token}, vm::{GeneralRegister, Instruction}};
+use crate::{lexer::{Lexer, Token}, vm::{GeneralRegister, Instruction, Reference}};
 
 struct Parser<'a> {
     lex: Lexer<'a>
@@ -58,15 +58,33 @@ impl<'a> Parser<'a> {
 
     fn set(&mut self) -> Instruction {
         let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in SET instruction: SET R n."),
+            Some(Token::Reference) => {
+                let r = match self.lex.next() {
+                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
+                    Some(Token::Value(n)) => GeneralRegister::Value(n),
+                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
+                    _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
+                };
+                Reference::Address(r)
+            }
+            Some(Token::Reg(r)) => Reference::Register(r),
+            _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
         };
 
         let value = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in SET instruction: SET R n."),
+            Some(Token::Reference) => {
+                let r = match self.lex.next() {
+                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
+                    Some(Token::Value(n)) => GeneralRegister::Value(n),
+                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
+                    _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
+                };
+                Reference::Address(r)
+            }
+            Some(Token::Reg(r)) => Reference::Register(r),
+            Some(Token::Value(n)) => Reference::Value(n),
+            Some(Token::Sens(s)) => Reference::Sensor(s),
+            _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
         };
 
         Instruction::Set(reg, value)

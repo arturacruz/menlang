@@ -1,5 +1,5 @@
 start:
-  SET FUND1 3
+  SET FUND1 4
   SET FUND2 1
   
 loop:
