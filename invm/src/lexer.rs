@@ -7,7 +7,8 @@ pub enum Token {
     Value(i32),
     Reg(Register),
     Sens(Sensor),
-    Set, Add, Sub, Goto, Gotoz, Print, Push, Pop, Buy, Sell, Crash,
+    Set, Add, Sub, Goto, Gotoz, Print, Push, Pop, Buy, Sell, Crash, Mult, Div,
+    LabelDeclare(String),
     Label(String),
     Endline
 }
@@ -43,6 +44,8 @@ impl<'a> Lexer<'a> {
             "SET" => Token::Set,
             "ADD" => Token::Add,
             "SUB" => Token::Sub,
+            "MULT" => Token::Mult,
+            "DIV" => Token::Div,
             "GOTO" => Token::Goto,
             "GOTOZ" => Token::Gotoz,
             "PRINT" => Token::Print,
@@ -60,7 +63,7 @@ impl<'a> Lexer<'a> {
             "EQUITY" => Token::Sens(Sensor::Equity),
             "OWNED" => Token::Sens(Sensor::Owned),
             "BALANCE" => Token::Sens(Sensor::Balance),
-            _ => panic!("[INVM] Unknown instruction or register: {s}.")
+            _ => panic!("[Lexer] Unknown instruction or register: {s}.")
         }
     }
 
@@ -75,7 +78,7 @@ impl<'a> Lexer<'a> {
             match next { 
                 ':' => {
                     self.source.next();
-                    return Token::Label(iden);
+                    return Token::LabelDeclare(iden);
                 }
                 'A'..='Z' | 'a'..='z' | '_' | '0'..='9' => iden.push(*next),
                 _ => return Lexer::get_keyword(iden),
@@ -84,15 +87,21 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // pub fn next_line(&mut self) -> Vec<Token> {
-    //     let mut line = vec![];
-    //     loop {
-    //         match self.next() {
-    //             Some(Token::Endline) | None => return line,
-    //             Some(s) => line.push(s),
-    //         }
-    //     }
-    // }
+    fn parse_label(&mut self) -> Token {
+        let mut iden = String::new();
+        loop {
+            let peek = self.source.peek();
+            let next = match peek {
+                Some(s) => s,
+                None => return Token::Label(iden),
+            };
+            match next { 
+                'A'..='Z' | 'a'..='z' | '_' | '0'..='9' => iden.push(*next),
+                _ => return Token::Label(iden),
+            }
+            self.source.next();
+        }
+    }
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -105,10 +114,11 @@ impl<'a> Iterator for Lexer<'a> {
             match char {
                 ' ' | '\t' => char = self.source.next()?,
                 '\n' => return Some(Token::Endline),
-                ':' => panic!("[INVM] Empty label identifier."),
+                '$' => return Some(self.parse_label()),
+                ':' => panic!("[Lexer] Empty label identifier."),
                 '0'..='9' => return Some(self.parse_number(char)),
                 'a'..='z' | 'A'..='Z' => return Some(self.parse_keyword(char)),
-                _ => panic!("[INVM] Invalid symbol: {char}.")
+                _ => panic!("[Lexer] Invalid symbol: {char}.")
             }
         }
     }

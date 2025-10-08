@@ -1,0 +1,13 @@
+start:
+  SET FUND1 3
+  SET FUND2 1
+  
+loop:
+  GOTOZ FUND1 $done  
+
+  MULT FUND1 FUND2  
+  SUB 1 FUND1       
+  GOTO $loop
+
+done:
+  PRINT FUND2

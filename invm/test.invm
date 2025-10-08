@@ -1,3 +1,9 @@
-PUSH 10
-POP FUND1
-PRINT FUND1
+
+  SET FUND1 10
+start:
+  PRINT SHARES
+  SUB 1 FUND1
+  GOTOZ FUND1 $done
+  GOTO $start
+
+done:
