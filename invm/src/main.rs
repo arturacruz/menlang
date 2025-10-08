@@ -1,19 +1,19 @@
 use std::fs;
 
-use crate::{args::ArgError, program::Program};
+use crate::{args::ArgError};
 
 mod vm; 
 mod stack;
-mod program;
 mod lexer;
 mod prepro;
 mod args;
+mod parser;
 
 fn main() {
     let filepath = match args::parse_args() {
         Err(err) => match err {
             ArgError::IncorrectSize => panic!("[Run] Incorrect number of arguments."),
-            ArgError::InvalidExtension => panic!("[Run] Expected a .go file."),
+            ArgError::InvalidExtension => panic!("[Run] Expected a .invm file."),
         },
         Ok(f) => f
     };
@@ -23,5 +23,5 @@ fn main() {
 
     let filtered = prepro::filter(query);
 
-    let program = Program::new(&filtered);
+    vm::run(&filtered);
 }

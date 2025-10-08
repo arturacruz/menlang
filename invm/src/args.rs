@@ -19,10 +19,10 @@ pub fn parse_args() -> Result<String, ArgError> {
         None => return Err(ArgError::IncorrectSize),
     };
     let last = {
-        let dot = filename.len() - 3;
+        let dot = filename.len() - 5;
         &filename[dot..]
     };
-    if last != ".go" {
+    if last != ".invm" {
         return Err(ArgError::InvalidExtension);
     }
     Ok(filename)

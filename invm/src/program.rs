@@ -1,37 +1,32 @@
-use std::{fs::File, io::{self, BufRead, BufReader, Lines}};
+use crate::{parser, vm::{GeneralRegister, Register}};
 
-use crate::{lexer::Lexer, prepro, vm::Register};
-
+#[derive(Debug)]
 pub enum Instruction {
-    Set(Register, i32),
-    Add(i32, Register),
-    Sub(i32, Register),
+    Set(Register, GeneralRegister),
+    Add(GeneralRegister, Register),
+    Sub(GeneralRegister, Register),
     Goto(String),
     Gotoz(Register, String),
-    Print(i32),
-    Push(i32),
+    Print(GeneralRegister),
+    Push(GeneralRegister),
     Pop(Register),
     Crash,
     Buy(u32),
     Sell(u32)
 }
 
-pub struct Program<'a> {
-    lex: Lexer<'a>,
+pub struct Program {
+    lines: Vec<Instruction>
 }
 
-impl<'a> Program<'a> {
-    pub fn new(query: &'a str) -> Self {
-        Program { lex: Lexer::new(query)  }
+impl Program {
+    pub fn new(query: &str) -> Self {
+        Program { lines: parser::read_lines(query) }
     }
 
     pub fn step(&mut self) -> Option<Instruction> {
-        let line = self.lex.next()?;
-        
-        Some(Instruction::Crash)
+        todo!()
     }
-
-
 }
 
 
