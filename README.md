@@ -39,7 +39,7 @@ Estes sensores só descrevem a situação atual.
 | **ADD**     | `ADD R1/n R2`   | Adiciona e guarda um valor em R2                                                  | `ADD 1 FUND1`         |
 | **SUB**     | `SUB R1/n R2`   | Subtrai e guarda um valor em R2                                                   | `SUB 1 FUND2`         |
 | **GOTO**    | `GOTO label`    | Pula para a label                                                                 | `GOTO loop`           |
-| **GOTOZ**   | `GOTOZ R label` | Pula para a label se R for 0                                                      | `GOTOZ S1 loop`       |
+| **GOTOZ**   | `GOTOZ R/n label` | Pula para a label se R ou n for 0                                                      | `GOTOZ S1 loop`       |
 | **PRINT**   | `PRINT R/n`       | Printa o valor atual do registrador                                               | `PRINT BALANCE`       |
 | **PUSH**    | `PUSH R/n`      | Coloca um valor no stack                                                          | `PUSH 10`             |
 | **POP**     | `POP R`         | Tira um valor do stack e coloca em R                                              | `POP FUND1`           |
