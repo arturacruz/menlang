@@ -56,37 +56,161 @@ Men Lang é uma linguagem de programação pensada para se assimilar ao diálogo
 ### EBNF 
 
 ```ebnf
-program        = { statement };
-statement      = {( declaration
-               | print
-               | increment )};
-declaration    = ( "literal" | "literalmente" ), identifier, "eh", expr, endline;
-un_op          = "mais" | "menos";
-increment      = identifier, (("win" | "W") | ("loss" | "L")), endline ;
-bin_op         = un_op | "divide" | "vezes" ;
-expr           = factor, { bin_op, factor };
-factor         = number | identifier | (un_op, factor) | ("(", expr, ")") ;
-block          = noend_block, "ne" ;
-noend_block    = statement, { statement };
-print          = ( "po" | "puts" | "puta" ), expr, endline;
-endline        = "men" | "mano" | "meo" | "menzinho" | "meu" | "bro" | "vei" ;
-identifier     = letter, {( letter | digit | "_" )} ;
-boolean        = "bizarro" | "certeza" | "depende" ;
-number         = digit, { digit };
-letter         = "a" | "..." | "z" | "A" | "..." | "Z" ;
-digit          = "0" | "1" | "..." | "9" ;
+program: 
+    /* empty */
+    | program statement
+    ;
+
+statement:
+    declaration
+    | print
+    | increment
+    | decrement
+    | conditional
+    | conditional_loop
+    | ENDLINE
+    ;
+
+declaration:
+    DECLARE IDENTIFIER ASSIGN expr ENDLINE
+    ;
+
+print:
+    PRINT expr ENDLINE
+    ;
+
+increment:
+    IDENTIFIER INC ENDLINE
+    ;
+
+decrement:
+    IDENTIFIER DEC ENDLINE
+    ;
+
+conditional:
+    IF bool_expr THEN noend_block { elseif_conditional } [else_conditional] ENDBLOCK
+    ;
+
+elseif_conditional:
+    | IF ELSE bool_expr THEN noend_block
+    ;
+
+else_conditional:
+    | ELSE THEN noend_block
+    ;
+
+conditional_loop:
+    WHILE UNTIL bool_expr block
+    ;
+
+bool_expr:
+    bool_term
+    | bool_expr OR bool_term
+    ;
+
+bool_term:
+    rel_expr
+    | bool_term AND rel_expr
+    ;
+
+rel_expr:
+    expr
+    | expr bool_bin_op expr
+    ;
+
+bool_bin_op:
+    EQUALS TO
+    | GREATER THAN
+    | LESSER THAN
+    ;
+
+expr:
+    factor
+    | expr bin_op factor
+    | PLUS factor %prec UNARY_MINUS
+    | MINUS factor %prec UNARY_MINUS
+    | NOT factor
+    ;
+
+bin_op:
+    PLUS | MINUS | DIVIDE | MULT
+    ;
+
+factor:
+NUMBER
+    | BOOLEAN
+    | IDENTIFIER
+    | LPAREN bool_expr RPAREN
+    ;
+
+block:
+    noend_block ENDBLOCK
+    ;
+
+noend_block:
+    statement
+    | noend_block statement
+    ;
+
+BOOLEAN:
+    "bizarro"
+    | "certeza"
+    | "depende"
+    ;
+
+IF: "se" ;
+THEN: "ent";
+ENDBLOCK: "ne";
+WHILE: "grind";
+UNTIL: "ate";
+ELSE: "pah";
+DECLARE: "literal" | "literalmente";
+ASSIGN: "eh";
+OR: "ou";
+AND: "e";
+NOT: "nao";
+EQUALS: "identico";
+TO: "a";
+GREATER: "maior";
+LESSER: "menor";
+THAN: "que";
+PLUS: "mais";
+MINUS: "menos";
+INC: "win";
+DEC: "loss";
+DIVIDE: "divide";
+MULT: "vezes";
+
+ENDLINE:
+    "men" | "mano" | "meo" | "menzinho" | "meu" | "bro" | "vei" ;
+
+PRINT: 
+    "po" | "puts" | "puta" ;
+
+IDENTIFIER:
+    LETTER { LETTER | DIGIT };
+
+NUMBER:
+    DIGIT { DIGIT } ;
+
+LETTER:
+    [a-zA-Z_] ;
+
+DIGIT:
+    [0-9];
+
+
 ```
 
 ### Example 
 
 ```
-literal a eh 2 vei
+literal a1 eh 2 vei
 literalmente b eh 2 mais 3 man
 literal c_2 eh bizarro men
 
 po bizarro vei
-puts a vezes b vei
-            
+puts a1 vezes b vei
 ```
 
 Output:

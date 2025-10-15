@@ -8,7 +8,7 @@ mod lexer;
 mod prepro;
 mod args;
 mod parser;
-mod simulation;
+mod heap;
 
 fn main() {
     let filepath = match args::parse_args() {

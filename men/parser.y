@@ -160,7 +160,7 @@ void yyerror(const char *s) {
 
 int main(int argc, char *argv[]) {
     if (argc > 1) {
-        yyin = fopen(argv[1], "r");
+yyin = fopen(argv[1], "r");
         if (!yyin) {
             fprintf(stderr, "Não foi possível abrir o arquivo: %s\n", argv[1]);
             return 1;
