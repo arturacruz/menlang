@@ -62,7 +62,7 @@ declaration:
     ;
 
 print:
-    PRINT expr ENDLINE
+    PRINT bool_expr ENDLINE
     // {
     //     printf("Print: %d\n", $2);
     //     free($2);
@@ -87,20 +87,32 @@ decrement:
 
 conditional:
     IF bool_expr THEN noend_block elseif_conditional else_conditional ENDBLOCK
+    {
+        printf("Enter if\n");
+    }
     ;
 
 elseif_conditional:
     /* empty */
     | IF ELSE bool_expr THEN noend_block
+    {
+        printf("Else if\n");
+    }
     ;
 
 else_conditional:
     /* empty */
     | ELSE THEN noend_block
+    {
+        printf("else\n");
+    }
     ;
 
 conditional_loop:
     WHILE UNTIL bool_expr block
+    {
+        printf("while\n");
+    }
     ;
 
 bool_expr:
@@ -125,21 +137,24 @@ bool_bin_op:
     ;
 
 expr:
-    factor
-    | expr bin_op factor
-    | PLUS factor %prec UNARY_MINUS
-    | MINUS factor %prec UNARY_MINUS
-    | NOT factor
+    term
+    | term PLUS term
+    | term MINUS term
     ;
 
-bin_op:
-    PLUS | MINUS | DIVIDE | MULT
+term: 
+    factor
+    | factor MULT factor
+    | factor DIVIDE factor
     ;
 
 factor:
     NUMBER
     | BOOLEAN
     | IDENTIFIER
+    | MINUS factor
+    | PLUS factor
+    | NOT factor
     | LPAREN bool_expr RPAREN
     ;
 
@@ -155,8 +170,10 @@ noend_block:
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro: %s\n", s);
+    extern char *yytext;
+    fprintf(stderr, "Erro sintático: %s no token '%s'\n", s, yytext);
 }
+
 
 int main(int argc, char *argv[]) {
     if (argc > 1) {

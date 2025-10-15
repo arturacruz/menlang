@@ -47,12 +47,12 @@ void yyerror(const char *s);
 "vei"           { return ENDLINE; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
-    yylval.identifier = strdup(yytext); 
+    yylval.iden = strdup(yytext); 
     return IDENTIFIER; 
 }
 
 [0-9]+          { 
-    yylval.iden = atoi(yytext); 
+    yylval.number = atoi(yytext); 
     return NUMBER; 
 }
 

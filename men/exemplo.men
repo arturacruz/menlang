@@ -1,0 +1,12 @@
+literal a1 eh 2 vei
+literalmente b eh 2 mais 3 men
+literal c_2 eh bizarro men
+
+po bizarro vei
+puts a1 vezes b vei
+
+grind enquanto a1 menor que 5 
+    po a1 men
+    a1 win men
+ne
+    
