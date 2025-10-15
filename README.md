@@ -162,7 +162,7 @@ IF: "se" ;
 THEN: "ent";
 ENDBLOCK: "ne";
 WHILE: "grind";
-UNTIL: "ate";
+UNTIL: "enquanto";
 ELSE: "pah";
 DECLARE: "literal" | "literalmente";
 ASSIGN: "eh";
@@ -211,12 +211,21 @@ literal c_2 eh bizarro men
 
 po bizarro vei
 puts a1 vezes b vei
+
+grind enquanto a1 menor que 5 
+    po a1 men
+    a1 win men
+ne
+    
 ```
 
 Output:
 ```
 bizarro
 10
+2 
+3 
+4
 ```
 
 

@@ -10,7 +10,7 @@ void yyerror(const char *s);
 "ent"           { return THEN; }
 "ne"            { return ENDBLOCK; }
 "grind"         { return WHILE; }
-"ate"           { return UNTIL; }
+"enquanto"           { return UNTIL; }
 "pah"           { return ELSE; }
 "literal"       { return DECLARE; }
 "literalmente"  { return DECLARE; }
