@@ -63,10 +63,9 @@ declaration:
 
 print:
     PRINT bool_expr ENDLINE
-    // {
-    //     printf("Print: %d\n", $2);
-    //     free($2);
-    // }
+    {
+        printf("Print var\n");
+    }
     ;
 
 increment:
@@ -86,32 +85,42 @@ decrement:
     ;
 
 conditional:
+    {
+        printf("if start\n");
+    }
     IF bool_expr THEN noend_block elseif_conditional else_conditional ENDBLOCK
     {
-        printf("Enter if\n");
+        printf("if end\n");
     }
     ;
 
 elseif_conditional:
-    /* empty */
+    {
+        printf("Else if start\n");
+    }
     | IF ELSE bool_expr THEN noend_block
     {
-        printf("Else if\n");
+        printf("Else if end\n");
     }
     ;
 
 else_conditional:
-    /* empty */
+    {
+        printf("else start\n");
+    }
     | ELSE THEN noend_block
     {
-        printf("else\n");
+        printf("else end\n");
     }
     ;
 
 conditional_loop:
+    {
+        printf("while start\n");
+    }
     WHILE UNTIL bool_expr block
     {
-        printf("while\n");
+        printf("while end\n");
     }
     ;
 
