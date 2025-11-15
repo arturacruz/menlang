@@ -35,19 +35,29 @@ Estes sensores só descrevem a situação atual.
 
 | Instrução   | Sintaxe         | Descrição                                                                         | Exemplo               |
 |-------------|-----------------|-----------------------------------------------------------------------------------|-----------------------|
-| **SET**     | `SET R n`       | Coloca o valor n em R                                                             | `SET FUND1 10`           |
-| **ADD**     | `ADD R1/n R2`   | Adiciona e guarda um valor em R2                                                  | `ADD 1 FUND1`         |
-| **SUB**     | `SUB R1/n R2`   | Subtrai e guarda um valor em R2                                                   | `SUB 1 FUND2`         |
-| **MULT**     | `MULT R1/n R2`   | Multipla R2 por um valor (inteiro) e guarda em si mesmo.         | `MULT 1 FUND1`         |
-| **DIV**     | `DIV R1/n R2`   | Divide R2 por um valor (inteiro) e guarda em si mesmo.             | `DIV 1 FUND2`         |
+| **SET**     | `SET *R *R/n`       | Coloca o valor n em R                                                             | `SET FUND1 10`           |
+| **ADD**     | `ADD *R1/n *R2`   | Adiciona e guarda um valor em R2                                                  | `ADD 1 FUND1`         |
+| **SUB**     | `SUB *R1/n *R2`   | Subtrai e guarda um valor em R2                                                   | `SUB 1 FUND2`         |
+| **MULT**     | `MULT *R1/n *R2`   | Multipla R2 por um valor (inteiro) e guarda em si mesmo.         | `MULT 1 FUND1`         |
+| **DIV**     | `DIV *R1/n *R2`   | Divide R2 por um valor (inteiro) e guarda em si mesmo.             | `DIV 1 FUND2`         |
 | **GOTO**    | `GOTO label`    | Pula para a label                                                                 | `GOTO loop`           |
-| **GOTOZ**   | `GOTOZ R/n label` | Pula para a label se R ou n for 0                                                      | `GOTOZ S1 loop`       |
-| **PRINT**   | `PRINT R/n`       | Printa o valor atual do registrador                                               | `PRINT BALANCE`       |
-| **PUSH**    | `PUSH R/n`      | Coloca um valor no stack                                                          | `PUSH 10`             |
-| **POP**     | `POP R`         | Tira um valor do stack e coloca em R                                              | `POP FUND1`           |
+| **GOIF**   | `GOIF cond *R/n label` | Pula para a label a condição for verdadeira, comparando R a 0                                                    | `GOTOZ S1 loop`       |
+| **PRINT**   | `PRINT *R/n type`       | Printa o valor atual do registrador com o tipo especificado                                             | `PRINT BALANCE int`       |
+| **PUSH**    | `PUSH *R/n`      | Coloca um valor no stack                                                          | `PUSH 10`             |
+| **POP**     | `POP *R`         | Tira um valor do stack e coloca em R                                              | `POP FUND1`           |
 | **CRASH**   | `CRASH`         | Para o programa                                                                   | `CRASH`               |
-| **BUY**     | `BUY n`         | Compra n ações. Se `BALANCE` for menor do que `n * STOCKPRICE`, para o programa.  | `BUY 10`              | 
-| **SELL**    | `SELL n`        | Vende n ações. Se `OWNED` for menor do que `n`, para o programa.                 | `SELL 1`              | 
+| **BUY**     | `BUY *R/n`         | Compra n ações. Se `BALANCE` for menor do que `n * STOCKPRICE`, para o programa.  | `BUY 10`              | 
+| **SELL**    | `SELL *R/n`        | Vende n ações. Se `OWNED` for menor do que `n`, para o programa.                 | `SELL 1`              | 
+| **READ**    | `READ *R type`        | Lê uma entrada do terminal e coloca o endereço do Stack onde foi armazenada a entrada em *R.           | `READ FUND1 str`              | 
+
+Na tabela acima, *R/n se refere a valores READ-ONLY, ou seja, pode ser um endereço, registrador, ou valor literal.
+Quando é *R, a operação irá ler e sobrescrever o valor no registrador ou no endereço.
+
+#### Tipos:
+
+`int`, `bool`, `char`, `str`
+
+
 
 # Men Lang
 
