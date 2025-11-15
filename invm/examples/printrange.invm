@@ -1,0 +1,13 @@
+start:
+    SET *1 0
+    SET *2 100
+
+loop:
+    PRINT *1 int
+    ADD 1 *1
+    SET FUND1 *1
+    SUB *2 FUND1
+    GOIF == FUND1 $end
+    GOTO $loop
+
+end:

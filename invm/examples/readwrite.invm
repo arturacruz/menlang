@@ -1,0 +1,6 @@
+start:
+    SET *0 3
+    SET *1 65
+    SET *2 66
+    SET *3 67
+    PRINT 0 str

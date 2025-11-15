@@ -1,7 +1,7 @@
 start:
   SET FUND1 10
   SET FUND2 1
-  
+
 loop:
   GOIF == FUND1 $done
 
