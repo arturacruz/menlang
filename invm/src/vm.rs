@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, u16};
 
-use rand::Rng;
+mod simulation;
 
-use crate::{parser, stack::Stack};
+use crate::{heap::Heap, parser, stack::Stack};
 
 pub fn run(query: &str) {
     let mut vm = VM::new(query);
@@ -14,15 +14,15 @@ pub fn run(query: &str) {
 #[derive(Debug, Clone)]
 pub enum Instruction {
     Set(Reference, Reference),
-    Add(GeneralRegister, Register),
-    Sub(GeneralRegister, Register),
-    Mult(GeneralRegister, Register),
-    Div(GeneralRegister, Register),
+    Add(Reference, Reference),
+    Sub(Reference, Reference),
+    Mult(Reference, Reference),
+    Div(Reference, Reference),
     Goto(String),
-    GoIf(Condition, GeneralRegister, String),
-    Print(GeneralRegister, Type),
-    Push(GeneralRegister),
-    Pop(Register),
+    GoIf(Condition, Reference, String),
+    Print(Reference, Type),
+    Push(Reference),
+    Pop(Reference),
     Crash,
     Buy(i32),
     Sell(i32),
@@ -76,7 +76,7 @@ struct VM {
     labels: HashMap<String, usize>,
     pc: usize,
     program: Vec<Instruction>,
-    heap: [i32; 65535],
+    heap: Heap,
     stack: Stack,
     crash: bool
 }
@@ -90,7 +90,7 @@ impl VM {
             labels: Self::init_labels(&program),
             pc: 0,
             program,
-            heap: [0; 65535],
+            heap: Heap::new(),
             stack: Stack::new(),
             crash: false
         }
@@ -122,14 +122,14 @@ impl VM {
         sensors
     }
 
-    fn expect_register_value(&mut self, reg: &Register) -> i32 {
+    fn expect_register_value(&self, reg: &Register) -> i32 {
         match self.registers.get(reg) {
             None => panic!("[INVM] Use of uninitialized register {reg:?}."),
             Some(n) => *n
         }
     }
 
-    fn expect_sensor_value(&mut self, reg: &Sensor) -> i32 {
+    fn expect_sensor_value(&self, reg: &Sensor) -> i32 {
         *self.sensors.get(reg).unwrap()
     }
 
@@ -140,12 +140,30 @@ impl VM {
         }
     }
 
-    fn expect_general_reg(&mut self, gr: GeneralRegister) -> i32 {
+    fn expect_general_reg(&self, gr: &GeneralRegister) -> i32 {
         match gr {
-            GeneralRegister::Register(r) => self.expect_register_value(&r),
-            GeneralRegister::Sensor(s) => self.expect_sensor_value(&s),
-            GeneralRegister::Value(v) => v,
+            GeneralRegister::Register(r) => self.expect_register_value(r),
+            GeneralRegister::Sensor(s) => self.expect_sensor_value(s),
+            GeneralRegister::Value(v) => *v,
         }
+    }
+
+    fn expect_reference(&self, r: &Reference) -> i32 {
+        match r {
+            Reference::Register(r) => self.expect_register_value(r),
+            Reference::Sensor(s) => self.expect_sensor_value(s),
+            Reference::Value(n) => *n,
+            Reference::Address(gr) => self.heap.get(
+                self.to_address(self.expect_general_reg(gr))
+            ),
+        }
+    }
+
+    fn to_address(&self, v: i32) -> u16 {
+        if !(0..65535).contains(&v) {
+            panic!("[INVM] Segmentation fault.");
+        }
+        v as u16
     }
 
     fn step(&mut self) {
@@ -177,96 +195,83 @@ impl VM {
         self.simulate();
     }
 
-    fn simulate(&mut self) {
-        let balance = self.expect_sensor_value(&Sensor::Balance);
-        let mut stockprice = self.expect_sensor_value(&Sensor::Stockprice);
-        let mut reputation = self.expect_sensor_value(&Sensor::Reputation);
-        let shares = self.expect_sensor_value(&Sensor::Shares);
-        let owned = self.expect_sensor_value(&Sensor::Owned);
-
-        let mut r = rand::rng();
-        let rep_shift = r.random_range(-5..=5);
-        reputation += rep_shift;
-
-        stockprice += r.random_range(-5..=5);
-        if stockprice < 0 {
-            stockprice = 0;
-        }
-
-        let bias = (reputation - 50) * stockprice / 10;
-        let factor = if bias < 0 {
-            - (bias * bias)
-        } else {
-            bias * bias
-        };
-
-        let amount = factor * (shares - owned);
-        let new = if amount + shares < 0 {
-            owned
-        } else {
-            amount + shares
-        };
-
-        self.sensors.insert(Sensor::Shares, new);
-        self.sensors.insert(Sensor::Stockprice, stockprice);
-        self.sensors.insert(Sensor::Reputation, reputation);
-        self.sensors.insert(Sensor::MarketValue, shares * stockprice);
-        self.sensors.insert(Sensor::Equity, owned * stockprice);
-        self.sensors.insert(Sensor::Balance, balance + 100);
-
-    }
 
     fn set(&mut self, reg: Reference, reg2: Reference) {
-
-        let val = match reg2 {
-            Reference::Register(r) => self.expect_register_value(&r),
-            Reference::Sensor(s) => self.expect_sensor_value(&s),
-            Reference::Value(n) => n,
-            Reference::Address(gr) => self.heap[self.expect_general_reg(gr) as usize],
-        };
+        let val = self.expect_reference(&reg2); 
         match reg {
             Reference::Register(r) => { self.registers.insert(r, val); },
             Reference::Address(g) => {
-                let v = self.expect_general_reg(g);
-                if !(0..65535).contains(&v) {
-                    panic!("[INVM] Segmentation fault.");
-                }
-                self.heap[v as usize] = val;
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), val)
             }
-            _ => panic!("[INVM] Unable to modify readonly value {reg:?}.")
+            _ => panic!("[INVM] Unable to modify readonly value {reg:?} at SET instruction.")
         }
     }
 
-    fn add(&mut self, gr: GeneralRegister, reg: Register) {
-        let val = self.expect_general_reg(gr);
-        let current = self.expect_register_value(&reg);
-        self.registers.insert(reg, val + current);
+    fn add(&mut self, reg: Reference, reg2: Reference) {
+        let val = self.expect_reference(&reg);
+        let current = self.expect_reference(&reg2);
+
+        let sum = val + current;
+
+        match reg2 {
+            Reference::Register(r) => { self.registers.insert(r, sum); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), sum)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at ADD instruction.")
+        }
     }
 
-    fn sub(&mut self, gr: GeneralRegister, reg: Register) {
-        let val = self.expect_general_reg(gr); 
-        let current = self.expect_register_value(&reg);
-        self.registers.insert(reg, current - val);
+    fn sub(&mut self, reg: Reference, reg2: Reference) {
+        let val = self.expect_reference(&reg);
+        let current = self.expect_reference(&reg2);
+        let res = current - val;
+        match reg2 {
+            Reference::Register(r) => { self.registers.insert(r, res); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), res)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at SUB instruction.")
+        }
     }
 
-    fn mult(&mut self, gr: GeneralRegister, reg: Register) {
-        let val = self.expect_general_reg(gr); 
-        let current = self.expect_register_value(&reg);
-        self.registers.insert(reg, current * val);
+    fn mult(&mut self, reg: Reference, reg2: Reference) {
+        let val = self.expect_reference(&reg);
+        let current = self.expect_reference(&reg2);
+        let res = val * current;
+        match reg2 {
+            Reference::Register(r) => { self.registers.insert(r, res); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), res)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at MULT instruction.")
+        }
     }
 
-    fn div(&mut self, gr: GeneralRegister, reg: Register) {
-        let val = self.expect_general_reg(gr); 
-        let current = self.expect_register_value(&reg);
-        self.registers.insert(reg, current / val);
+    fn div(&mut self, reg: Reference, reg2: Reference) {
+        let val = self.expect_reference(&reg);
+        let current = self.expect_reference(&reg2);
+        let res = val / current;
+        match reg2 {
+            Reference::Register(r) => { self.registers.insert(r, res); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), res)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at DIV instruction.")
+        }
     }
 
     fn goto(&mut self, label: String) {
         self.pc = self.expect_label(&label);
     }
 
-    fn go_if(&mut self, cond: Condition, gr: GeneralRegister, label: String) {
-        let val = self.expect_general_reg(gr);
+    fn go_if(&mut self, cond: Condition, reg: Reference, label: String) {
+        let val = self.expect_reference(&reg);
 
         let c = match cond {
             Condition::Equals => val == 0,
@@ -282,8 +287,8 @@ impl VM {
         }
     }
 
-    fn print(&mut self, gr: GeneralRegister, t: Type) {
-        let val = self.expect_general_reg(gr);
+    fn print(&mut self, reg: Reference, t: Type) {
+        let val = self.expect_reference(&reg);
         match t {
             Type::Int => println!("{val}"),
             Type::Bool => println!("{}", val != 0),
@@ -291,14 +296,21 @@ impl VM {
         }
     }
 
-    fn push(&mut self, gr: GeneralRegister) {
-        let val = self.expect_general_reg(gr);
+    fn push(&mut self, reg: Reference) {
+        let val = self.expect_reference(&reg);
         self.stack.push(val); 
     }
 
-    fn pop(&mut self, reg: Register) {
+    fn pop(&mut self, reg: Reference) {
         let val = self.stack.pop();
-        self.registers.insert(reg, val);
+        match reg {
+            Reference::Register(r) => { self.registers.insert(r, val); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.heap.set(self.to_address(v), val)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg:?}.")
+        }
     }
 
     fn crash(&mut self) {

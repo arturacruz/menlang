@@ -30,6 +30,40 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn expect_read_only(&mut self, inst: &str, usage: &str) -> Reference {
+        match self.lex.next() {
+            Some(Token::Reference) => {
+                let r = match self.lex.next() {
+                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
+                    Some(Token::Value(n)) => GeneralRegister::Value(n),
+                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
+                    _ => panic!("[Parser] Expected a register or number in {inst} instruction: {usage}."),
+                };
+                Reference::Address(r)
+            }
+            Some(Token::Reg(r)) => Reference::Register(r),
+            Some(Token::Value(n)) => Reference::Value(n),
+            Some(Token::Sens(s)) => Reference::Sensor(s),
+            _ => panic!("[Parser] Expected a register or number in {inst} instruction: {usage}."),
+        }
+    }
+
+    fn expect_write(&mut self, inst: &str, usage: &str) -> Reference {
+        match self.lex.next() {
+            Some(Token::Reference) => {
+                let r = match self.lex.next() {
+                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
+                    Some(Token::Value(n)) => GeneralRegister::Value(n),
+                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
+                    _ => panic!("[Parser] Expected a register in {inst} instruction: {usage}."),
+                };
+                Reference::Address(r)
+            }
+            Some(Token::Reg(r)) => Reference::Register(r),
+            _ => panic!("[Parser] Expected a register in number {inst} instruction: {usage}."),
+        }
+
+    }
     fn match_instruction(&mut self) -> Option<Instruction> {
         let inst = loop {
             break match self.lex.next()? {
@@ -57,100 +91,46 @@ impl<'a> Parser<'a> {
     }
 
     fn set(&mut self) -> Instruction {
-        let reg = match self.lex.next() {
-            Some(Token::Reference) => {
-                let r = match self.lex.next() {
-                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
-                    Some(Token::Value(n)) => GeneralRegister::Value(n),
-                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-                    _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
-                };
-                Reference::Address(r)
-            }
-            Some(Token::Reg(r)) => Reference::Register(r),
-            _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
-        };
-
-        let value = match self.lex.next() {
-            Some(Token::Reference) => {
-                let r = match self.lex.next() {
-                    Some(Token::Reg(r)) => GeneralRegister::Register(r),
-                    Some(Token::Value(n)) => GeneralRegister::Value(n),
-                    Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-                    _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
-                };
-                Reference::Address(r)
-            }
-            Some(Token::Reg(r)) => Reference::Register(r),
-            Some(Token::Value(n)) => Reference::Value(n),
-            Some(Token::Sens(s)) => Reference::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in SET instruction: SET *R/n *R/n."),
-        };
+        let inst = "SET";
+        let usage = "SET *R/n *R";
+        let reg = self.expect_write(inst, usage);
+        let value = self.expect_read_only(inst, usage);
 
         Instruction::Set(reg, value)
-
     }
 
     fn add(&mut self) -> Instruction {
-        let value = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in ADD instruction: ADD R1/n R2."),
-        };
-
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in ADD instruction: ADD R1/n R2."),
-        };
+        let inst = "ADD";
+        let usage = "ADD *R/n *R";
+        let value = self.expect_read_only(inst, usage);
+        let reg = self.expect_write(inst, usage);
 
         Instruction::Add(value, reg)
     }
 
     fn sub(&mut self) -> Instruction {
-        let value = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in SUB instruction: SUB R1/n R2."),
-        };
-
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in SUB instruction: SUB R1/n R2."),
-        };
+        let inst = "SUB";
+        let usage = "SUB *R/n *R";
+        let value = self.expect_read_only(inst, usage);
+        let reg = self.expect_write(inst, usage);
 
         Instruction::Sub(value, reg)
     }
 
     fn mult(&mut self) -> Instruction {
-        let value = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in MULT instruction: MULT R1/n R2."),
-        };
-
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in MULT instruction: MULT R1/n R2."),
-        };
+        let inst = "MULT";
+        let usage = "MULT *R/n *R";
+        let value = self.expect_read_only(inst, usage);
+        let reg = self.expect_write(inst, usage);
 
         Instruction::Mult(value, reg)
     }
 
     fn div(&mut self) -> Instruction {
-        let value = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or number in DIV instruction: DIV R1/n R2."),
-        };
-
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in DIV instruction: DIV R1/n R2."),
-        };
+        let inst = "DIV";
+        let usage = "DIV *R/n *R";
+        let value = self.expect_read_only(inst, usage);
+        let reg = self.expect_write(inst, usage);
 
         Instruction::Div(value, reg)
     }
@@ -173,12 +153,7 @@ impl<'a> Parser<'a> {
             n => panic!("[Parser] Expected a Condition in GOIF instruction (GOIF COND R label), got {n:?}"),
         };
 
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or value in GOIF instruction: GOIF R label."),
-        };
+        let reg = self.expect_read_only("GOIF", "GOIF COND *R/n label");
 
         let label = match self.lex.next() {
             Some(Token::Label(s)) => s,
@@ -189,12 +164,7 @@ impl<'a> Parser<'a> {
     }
 
     fn print(&mut self) -> Instruction {
-        let val = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or value in PRINT instruction: PRINT R/n type.")
-        };
+        let val = self.expect_read_only("PRINT", "PRINT *R/n type");
 
         let t = match self.lex.next() {
             Some(Token::Type(t)) => t,
@@ -204,21 +174,13 @@ impl<'a> Parser<'a> {
     }
 
     fn push(&mut self) -> Instruction {
-        let val = match self.lex.next() {
-            Some(Token::Reg(r)) => GeneralRegister::Register(r),
-            Some(Token::Value(n)) => GeneralRegister::Value(n),
-            Some(Token::Sens(s)) => GeneralRegister::Sensor(s),
-            _ => panic!("[Parser] Expected a register or value in PUSH instruction: PUSH R/n.")
-        };
+        let val = self.expect_read_only("PUSH", "PUSH *R/n");
         Instruction::Push(val)
 
     }
 
     fn pop(&mut self) -> Instruction {
-        let reg = match self.lex.next() {
-            Some(Token::Reg(r)) => r,
-            _ => panic!("[Parser] Expected a register in POP instruction: POP R.")
-        };
+        let reg = self.expect_write("POP", "POP *R");
         Instruction::Pop(reg)
     }
 

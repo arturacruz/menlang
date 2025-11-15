@@ -1,0 +1,13 @@
+start:
+  SET *1 4
+  SET *2 1
+  
+loop:
+  GOIF == *1 $done
+
+  MULT *1 *2  
+  SUB 1 *1    
+  GOTO $loop
+
+done:
+  PRINT *2 int
