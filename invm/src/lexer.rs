@@ -7,7 +7,7 @@ pub enum Token {
     Value(i32),
     Reg(Register),
     Sens(Sensor),
-    Set, Add, Sub, Goto, GoIf, Print, Push, Pop, Buy, Sell, Crash, Mult, Div,
+    Set, Add, Sub, Goto, GoIf, Print, Push, Pop, Buy, Sell, Crash, Mult, Div, Read,
     LabelDeclare(String),
     Label(String),
     Reference,
@@ -54,6 +54,7 @@ impl<'a> Lexer<'a> {
             "PRINT" => Token::Print,
             "PUSH" => Token::Push,
             "POP" => Token::Pop,
+            "READ" => Token::Read,
             "CRASH" => Token::Crash,
             "BUY" => Token::Buy,
             "SELL" => Token::Sell,
@@ -69,6 +70,7 @@ impl<'a> Lexer<'a> {
             "char" => Token::Type(Type::Char),
             "int" => Token::Type(Type::Int),
             "bool" => Token::Type(Type::Bool),
+            "str" => Token::Type(Type::Str),
             _ => panic!("[Lexer] Unknown instruction, type or register: {s}.")
         }
     }

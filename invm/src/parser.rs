@@ -82,6 +82,7 @@ impl<'a> Parser<'a> {
                 Token::Buy => self.buy(),
                 Token::Sell => self.sell(),
                 Token::LabelDeclare(n) => Instruction::DeclareLabel(n),
+                Token::Read => self.read(),
                 Token::Label(n) => panic!("[Parser] Incorrect use of label {n}."),
                 n => panic!("[Parser] Unknown instruction {n:?}.")
             };
@@ -202,5 +203,15 @@ impl<'a> Parser<'a> {
             _ => panic!("[INVM] Expected a positive value in SELL instruction: SELL n.")
         };
         Instruction::Sell(val)
+    }
+
+    fn read(&mut self) -> Instruction {
+        let reg = self.expect_write("READ", "READ *R type");
+        let t = match self.lex.next() {
+            Some(Token::Type(t)) => t,
+            _ => panic!("[Parser] Expected a type after READ instruction (READ *R type).")
+        };
+
+        Instruction::Read(reg, t)
     }
 }

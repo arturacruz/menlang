@@ -1,8 +1,8 @@
-use std::{collections::HashMap, u16};
+use std::{collections::HashMap, io::stdin};
 
 mod simulation;
 
-use crate::{heap::Heap, parser, stack::Stack};
+use crate::{parser, stack::Stack};
 
 pub fn run(query: &str) {
     let mut vm = VM::new(query);
@@ -27,11 +27,12 @@ pub enum Instruction {
     Buy(i32),
     Sell(i32),
     DeclareLabel(String),
+    Read(Reference, Type)
 }
 
 #[derive(Debug, Clone)]
 pub enum Type {
-    Int, Bool, Char
+    Int, Bool, Char, Str
 }
 
 #[derive(Debug, Clone)]
@@ -76,7 +77,6 @@ struct VM {
     labels: HashMap<String, usize>,
     pc: usize,
     program: Vec<Instruction>,
-    heap: Heap,
     stack: Stack,
     crash: bool
 }
@@ -90,7 +90,6 @@ impl VM {
             labels: Self::init_labels(&program),
             pc: 0,
             program,
-            heap: Heap::new(),
             stack: Stack::new(),
             crash: false
         }
@@ -129,6 +128,18 @@ impl VM {
         }
     }
 
+    fn set_at_reference(&mut self, reg: Reference, val: i32) {
+        match reg {
+            Reference::Register(r) => { self.registers.insert(r, val); },
+            Reference::Address(g) => {
+                let v = self.expect_general_reg(&g);
+                self.stack.set(self.to_address(v), val)
+            },
+            _ => panic!("[INVM] Unable to modify readonly value {reg:?} at SUB instruction.")
+        }
+
+    }
+
     fn expect_sensor_value(&self, reg: &Sensor) -> i32 {
         *self.sensors.get(reg).unwrap()
     }
@@ -153,7 +164,7 @@ impl VM {
             Reference::Register(r) => self.expect_register_value(r),
             Reference::Sensor(s) => self.expect_sensor_value(s),
             Reference::Value(n) => *n,
-            Reference::Address(gr) => self.heap.get(
+            Reference::Address(gr) => self.stack.get(
                 self.to_address(self.expect_general_reg(gr))
             ),
         }
@@ -190,6 +201,7 @@ impl VM {
             Instruction::Buy(amount) => self.buy(amount),
             Instruction::Sell(amount) => self.sell(amount),
             Instruction::DeclareLabel(_) => (),
+            Instruction::Read(r, t) => self.read(r, t) 
         }
         self.pc += 1;
         self.simulate();
@@ -198,14 +210,7 @@ impl VM {
 
     fn set(&mut self, reg: Reference, reg2: Reference) {
         let val = self.expect_reference(&reg2); 
-        match reg {
-            Reference::Register(r) => { self.registers.insert(r, val); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), val)
-            }
-            _ => panic!("[INVM] Unable to modify readonly value {reg:?} at SET instruction.")
-        }
+        self.set_at_reference(reg, val);
     }
 
     fn add(&mut self, reg: Reference, reg2: Reference) {
@@ -214,56 +219,28 @@ impl VM {
 
         let sum = val + current;
 
-        match reg2 {
-            Reference::Register(r) => { self.registers.insert(r, sum); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), sum)
-            },
-            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at ADD instruction.")
-        }
+        self.set_at_reference(reg2, sum);
     }
 
     fn sub(&mut self, reg: Reference, reg2: Reference) {
         let val = self.expect_reference(&reg);
         let current = self.expect_reference(&reg2);
         let res = current - val;
-        match reg2 {
-            Reference::Register(r) => { self.registers.insert(r, res); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), res)
-            },
-            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at SUB instruction.")
-        }
+        self.set_at_reference(reg2, res);
     }
 
     fn mult(&mut self, reg: Reference, reg2: Reference) {
         let val = self.expect_reference(&reg);
         let current = self.expect_reference(&reg2);
         let res = val * current;
-        match reg2 {
-            Reference::Register(r) => { self.registers.insert(r, res); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), res)
-            },
-            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at MULT instruction.")
-        }
+        self.set_at_reference(reg2, res);
     }
 
     fn div(&mut self, reg: Reference, reg2: Reference) {
         let val = self.expect_reference(&reg);
         let current = self.expect_reference(&reg2);
         let res = val / current;
-        match reg2 {
-            Reference::Register(r) => { self.registers.insert(r, res); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), res)
-            },
-            _ => panic!("[INVM] Unable to modify readonly value {reg2:?} at DIV instruction.")
-        }
+        self.set_at_reference(reg2, res);
     }
 
     fn goto(&mut self, label: String) {
@@ -293,6 +270,7 @@ impl VM {
             Type::Int => println!("{val}"),
             Type::Bool => println!("{}", val != 0),
             Type::Char => println!("{}", (val % 256) as u8 as char),
+            Type::Str => println!("{}", self.stack.get_str(val as u16))
         }
     }
 
@@ -303,14 +281,7 @@ impl VM {
 
     fn pop(&mut self, reg: Reference) {
         let val = self.stack.pop();
-        match reg {
-            Reference::Register(r) => { self.registers.insert(r, val); },
-            Reference::Address(g) => {
-                let v = self.expect_general_reg(&g);
-                self.heap.set(self.to_address(v), val)
-            },
-            _ => panic!("[INVM] Unable to modify readonly value {reg:?}.")
-        }
+        self.set_at_reference(reg, val);
     }
 
     fn crash(&mut self) {
@@ -342,5 +313,31 @@ impl VM {
         let balance = self.expect_sensor_value(&Sensor::Balance);
         self.sensors.insert(Sensor::Balance, balance + total_price);
         self.sensors.insert(Sensor::Owned, owned - amount);
+    }
+
+    fn read(&mut self, r: Reference, t: Type) {
+        let mut res = String::new();
+
+        stdin().read_line(&mut res).expect("[INVM] Failed to READ from terminal.");
+        let res = res.trim_end();
+
+        match t {
+            Type::Int | Type::Bool => {
+                let n = res.parse::<i32>().expect("[INVM] Failed to convert READ value to int.");
+                self.set_at_reference(r, n);
+            },
+            Type::Char => {
+                if res.len() != 1 {
+                    panic!("[INVM] Failed to convert READ value to char. Expected a single character, not multiple.")
+                }
+
+                let c = res.chars().next().expect("[INVM] Failed to get character of READ buffer.");
+                self.set_at_reference(r, c as i32);
+            },
+            Type::Str => {
+                let addr = self.stack.alloc_str(res.to_string());
+                self.set_at_reference(r, addr as i32);
+            }
+        };
     }
 }
