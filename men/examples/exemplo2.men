@@ -1,0 +1,13 @@
+literal x eh 4 men
+literalmente i eh 0 men
+grind enquanto i menor que x
+    po i men
+    po i vezes 2 men
+    i win men   
+ne
+se x identico a 10 ent
+    po 50 men
+pah
+    po 100 men
+ne
+

@@ -339,13 +339,13 @@ int main(int argc, char *argv[]) {
 
     fprintf(stderr, "DEBUG: semantic ok\n");
 
-    if (codegen_emit(root, "out.vm") != 0) {
+    if (codegen_emit(root, "out.invm") != 0) {
         fprintf(stderr, "Erro durante codegen\n");
         ast_free(root);
         return 1;
     }
 
-    fprintf(stderr, "Código gerado em out.vm\n");
+    fprintf(stderr, "Código gerado em out.invm\n");
     ast_free(root);
 
     return result;

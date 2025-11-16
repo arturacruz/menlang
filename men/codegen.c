@@ -126,9 +126,9 @@ static int gen_expr_to_slot(AST *e) {
             char *Ltrue = new_label("not_true_");
             char *Lend = new_label("not_end_");
             emitf("SET FUND1 *%d\n", s);
-            emitf("GOIF == FUND1 %s\n", Ltrue);
+            emitf("GOIF == FUND1 $%s\n", Ltrue);
             emitf("SET *%d 0\n", out);
-            emitf("GOTO %s\n", Lend);
+            emitf("GOTO $%s\n", Lend);
             emitf("%s:\n", Ltrue);
             emitf("SET *%d 1\n", out);
             emitf("%s:\n", Lend);
@@ -192,11 +192,11 @@ static int gen_expr_to_slot(AST *e) {
             emitf("SET FUND1 *%d\n", out);
             char *Ltrue = new_label("rel_true_");
             char *Lend = new_label("rel_end_");
-            if (strcmp(e->op,"<")==0) emitf("GOIF < FUND1 %s\n", Ltrue);
-            else if (strcmp(e->op,">")==0) emitf("GOIF > FUND1 %s\n", Ltrue);
-            else emitf("GOIF == FUND1 %s\n", Ltrue);
+            if (strcmp(e->op,"<")==0) emitf("GOIF < FUND1 $%s\n", Ltrue);
+            else if (strcmp(e->op,">")==0) emitf("GOIF > FUND1 $%s\n", Ltrue);
+            else emitf("GOIF == FUND1 $%s\n", Ltrue);
             emitf("SET *%d 0\n", out);
-            emitf("GOTO %s\n", Lend);
+            emitf("GOTO $%s\n", Lend);
             emitf("%s:\n", Ltrue);
             emitf("SET *%d 1\n", out);
             emitf("%s:\n", Lend);
@@ -213,20 +213,20 @@ static int gen_expr_to_slot(AST *e) {
             char *Lafter = new_label("logic_after_");
             emitf("SET FUND1 *%d\n", L);
             if (strcmp(e->op,"AND")==0) {
-                emitf("GOIF == FUND1 %s\n", Lfalse);
+                emitf("GOIF == FUND1 $%s\n", Lfalse);
                 int R = gen_expr_to_slot(e->right);
                 if (R < 0) { free(Lfalse); free(Lafter); return -1; }
                 emitf("SET FUND2 *%d\n", R);
                 emitf("SET *%d FUND2\n", out);
-                emitf("GOTO %s\n", Lafter);
+                emitf("GOTO $%s\n", Lafter);
                 emitf("%s:\n", Lfalse);
                 emitf("SET *%d 0\n", out);
                 emitf("%s:\n", Lafter);
             } else {
                 char *Ltrue = new_label("logic_true_");
-                emitf("GOIF == FUND1 %s\n", Ltrue);
+                emitf("GOIF == FUND1 $%s\n", Ltrue);
                 emitf("SET *%d 1\n", out);
-                emitf("GOTO %s\n", Lafter);
+                emitf("GOTO $%s\n", Lafter);
                 emitf("%s:\n", Ltrue);
                 int R = gen_expr_to_slot(e->right);
                 if (R < 0) { free(Ltrue); free(Lfalse); free(Lafter); return -1; }
@@ -287,10 +287,10 @@ static void gen_stmt(AST *s) {
         char *Lthen = new_label("then_");
         char *Lend = new_label("ifend_");
         emitf("SET FUND1 *%d\n", cond);
-        emitf("GOIF == FUND1 %s\n", Lend);
+        emitf("GOIF == FUND1 $%s\n", Lend);
         emitf("%s:\n", Lthen);
         gen_block(s->right);
-        emitf("GOTO %s\n", Lend);
+        emitf("GOTO $%s\n", Lend);
         emitf("%s:\n", Lend);
         if (s->next) gen_block(s->next);
         free(Lthen); free(Lend);
@@ -302,9 +302,9 @@ static void gen_stmt(AST *s) {
         emitf("%s:\n", Lstart);
         int cond = gen_expr_to_slot(s->left);
         emitf("SET FUND1 *%d\n", cond);
-        emitf("GOIF == FUND1 %s\n", Lend);
+        emitf("GOIF == FUND1 $%s\n", Lend);
         gen_block(s->right);
-        emitf("GOTO %s\n", Lstart);
+        emitf("GOTO $%s\n", Lstart);
         emitf("%s:\n", Lend);
         free(Lstart); free(Lend);
         return;
