@@ -10,7 +10,7 @@ void yyerror(const char *s);
 "ent"           { return THEN; }
 "ne"            { return ENDBLOCK; }
 "grind"         { return WHILE; }
-"enquanto"           { return UNTIL; }
+"enquanto"      { return UNTIL; }
 "pah"           { return ELSE; }
 "literal"       { return DECLARE; }
 "literalmente"  { return DECLARE; }
@@ -46,30 +46,29 @@ void yyerror(const char *s);
 "bro"           { return ENDLINE; }
 "vei"           { return ENDLINE; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { 
-    yylval.iden = strdup(yytext); 
-    return IDENTIFIER; 
+[ \t\r\n]+      ;
+
+"#".*           ;
+
+[a-zA-Z_][a-zA-Z0-9_]* {
+    yylval.iden = strdup(yytext);
+    return IDENTIFIER;
 }
 
-[0-9]+          { 
-    yylval.number = atoi(yytext); 
-    return NUMBER; 
+[0-9]+          {
+    yylval.number = atoi(yytext);
+    return NUMBER;
 }
 
 "("             { return LPAREN; }
 ")"             { return RPAREN; }
 
-[ \t\n]         ;
-
-"#".*           ;
-
-.               { 
-    printf("Caractere desconhecido: %c\n", *yytext); 
-    return ERROR; 
+.               {
+    printf("Caractere desconhecido: %c\n", *yytext);
+    return ERROR;
 }
 
 %%
 
-int yywrap() {
-    return 1;
-}
+int yywrap() { return 1; }
+
