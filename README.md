@@ -1,8 +1,8 @@
-# PARA EXECUTAR / TESTAR:
+# Para executar / testar
 
 Você pode compilar manualmente usando os binaries menc e vm, ou usar o script automatizado menc.sh.  
-Exemplo:
-    menc.sh examples/exemplo.men
+Exemplo:  
+    `$ menc.sh examples/exemplo.men`
 
 # Investment VM
 
