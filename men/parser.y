@@ -1,23 +1,18 @@
-/* parser.y (corrigido para incluir ast.h no header gerado) */
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* mantemos includes que vão para parser.tab.c */
 #include "codegen.h"
 #include "symtab.h"
 
-/* Externs do lexer */
 extern int yylex();
 extern FILE *yyin;
 void yyerror(const char *s);
 
-/* top-level statements array */
 AST **top_stmts = NULL;
 int top_count = 0;
 
-/* helper to push top-level statement */
 static void push_top(AST *s) {
     AST **n = realloc(top_stmts, sizeof(AST*) * (top_count + 1));
     if (!n) { perror("realloc"); exit(1); }
@@ -26,7 +21,6 @@ static void push_top(AST *s) {
 }
 %}
 
-/* garantimos que o header gerado conheça AST */
 %code requires {
   #include "ast.h"
 }
@@ -39,7 +33,6 @@ static void push_top(AST *s) {
     AST **astlist;
 }
 
-/* token declarations */
 %token <iden> IDENTIFIER
 %token <number> NUMBER
 %token <bool_val> BOOLEAN
@@ -52,10 +45,8 @@ static void push_top(AST *s) {
 %token ENDLINE
 %token LPAREN RPAREN ERROR
 
-/* nonterminals types */
 %type <ast> statement declaration print increment decrement conditional conditional_loop bool_expr bool_term rel_expr expr term factor block noend_block elseif_conditional else_conditional
 
-/* Precedence */
 %left OR
 %left AND
 %left EQUALS GREATER LESSER
@@ -66,7 +57,6 @@ static void push_top(AST *s) {
 %%
 
 program:
-    /* empty */ { /* explicit: nothing to push here */ }
     | program statement
     ;
 
@@ -79,7 +69,6 @@ statement:
     | conditional_loop
     | ENDLINE
     {
-        /* produce an empty AST node for blank line and push it */
         $$ = ast_new(N_EMPTY);
         push_top($$);
     }
@@ -124,12 +113,10 @@ decrement:
     }
     ;
 
-/* conditional supports multiple else-if and optional else */
 conditional:
     IF bool_expr THEN noend_block elseif_conditional else_conditional ENDBLOCK
     {
         AST *elseblock = $6;
-        /* elseif_conditional already converted to a block if present */
         AST *ifnode = ast_new_if($2, $4, elseblock);
         push_top(ifnode);
         $$ = ifnode;
@@ -137,11 +124,9 @@ conditional:
     ;
 
 elseif_conditional:
-    /* empty */
     { $$ = NULL; }
     | IF ELSE bool_expr THEN noend_block
     {
-        /* transform this elseif into an else that contains an if node */
         AST *inner_if = ast_new_if($3, $5, NULL);
         AST **arr = malloc(sizeof(AST*));
         arr[0] = inner_if;
@@ -150,7 +135,6 @@ elseif_conditional:
     ;
 
 else_conditional:
-    /* empty */
     { $$ = NULL; }
     | ELSE THEN noend_block
     {
@@ -211,7 +195,7 @@ expr:
     }
     | PLUS factor %prec UNARY_MINUS
     {
-        $$ = $2; /* unary plus -> no-op */
+        $$ = $2; 
     }
     | MINUS factor %prec UNARY_MINUS
     {
@@ -284,10 +268,9 @@ noend_block:
 
 void yyerror(const char *s) {
     extern char *yytext;
-    fprintf(stderr, "Erro sintático: %s no token '%s'\n", s, yytext);
+    // fprintf(stderr, "Erro sintático: %s no token '%s'\n", s, yytext);
 }
 
-/* main unchanged... (same as previous full file) */
 int main(int argc, char *argv[]) {
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
@@ -299,13 +282,12 @@ int main(int argc, char *argv[]) {
         printf("Digite seu código (Ctrl+D para finalizar):\n");
     }
 
-    fprintf(stderr, "DEBUG: starting parse\n");
+    // fprintf(stderr, "DEBUG: starting parse\n");
     int result = yyparse();
-    fprintf(stderr, "DEBUG: parsed, result=%d\n", result);
+    // fprintf(stderr, "DEBUG: parsed, result=%d\n", result);
 
     if (yyin != stdin) fclose(yyin);
 
-    /* Build root block from top_stmts */
     AST *root = NULL;
     if (top_count > 0) {
         AST **arr = calloc(top_count, sizeof(AST*));
@@ -316,37 +298,37 @@ int main(int argc, char *argv[]) {
         root = ast_new_block(arr, 0);
     }
 
-    fprintf(stderr, "DEBUG: built AST, top_count=%d\n", top_count);
+    // fprintf(stderr, "DEBUG: built AST, top_count=%d\n", top_count);
 
-    fprintf(stderr, "DEBUG: AST dump:\n");
-    ast_dump(root, 0);
-    fflush(stderr);
+    // fprintf(stderr, "DEBUG: AST dump:\n");
+    // ast_dump(root, 0);
+    // fflush(stderr);
 
     int v = ast_validate(root);
     if (v != 0) {
-        fprintf(stderr, "AST validation failed (%d errors). Aborting compilation.\n", v);
-        ast_free(root);
+        // fprintf(stderr, "AST validation failed (%d errors). Aborting compilation.\n", v);
+        // ast_free(root);
         return 1;
     } else {
-        fprintf(stderr, "AST validation: OK\n");
+        // fprintf(stderr, "AST validation: OK\n");
     }
 
     if (semantic_check(root) != 0) {
-        fprintf(stderr, "Erros semânticos detectados. Abortando geração de código.\n");
-        ast_free(root);
+        // fprintf(stderr, "Erros semânticos detectados. Abortando geração de código.\n");
+        // ast_free(root);
         return 1;
     }
 
-    fprintf(stderr, "DEBUG: semantic ok\n");
+    // fprintf(stderr, "DEBUG: semantic ok\n");
 
     if (codegen_emit(root, "out.invm") != 0) {
-        fprintf(stderr, "Erro durante codegen\n");
-        ast_free(root);
+        // fprintf(stderr, "Erro durante codegen\n");
+        // ast_free(root);
         return 1;
     }
 
-    fprintf(stderr, "Código gerado em out.invm\n");
-    ast_free(root);
+    // fprintf(stderr, "Código gerado em out.invm\n");
+    // ast_free(root);
 
     return result;
 }

@@ -2,7 +2,9 @@
 #include "parser.tab.h"
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 void yyerror(const char *s);
+
 %}
 
 %%
@@ -36,7 +38,8 @@ void yyerror(const char *s);
 
 "bizarro"       { yylval.bool_val = 0; return BOOLEAN; }
 "certeza"       { yylval.bool_val = 1; return BOOLEAN; }
-"depende"       { yylval.bool_val = rand() % 2; return BOOLEAN; }
+"depende"       { srand(time(NULL));
+    yylval.bool_val = rand() % 2; return BOOLEAN; }
 
 "men"           { return ENDLINE; }
 "mano"          { return ENDLINE; }
