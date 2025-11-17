@@ -2,7 +2,9 @@
 #include "parser.tab.h"
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 void yyerror(const char *s);
+
 %}
 
 %%
@@ -10,7 +12,7 @@ void yyerror(const char *s);
 "ent"           { return THEN; }
 "ne"            { return ENDBLOCK; }
 "grind"         { return WHILE; }
-"enquanto"           { return UNTIL; }
+"enquanto"      { return UNTIL; }
 "pah"           { return ELSE; }
 "literal"       { return DECLARE; }
 "literalmente"  { return DECLARE; }
@@ -36,7 +38,8 @@ void yyerror(const char *s);
 
 "bizarro"       { yylval.bool_val = 0; return BOOLEAN; }
 "certeza"       { yylval.bool_val = 1; return BOOLEAN; }
-"depende"       { yylval.bool_val = rand() % 2; return BOOLEAN; }
+"depende"       { srand(time(NULL));
+    yylval.bool_val = rand() % 2; return BOOLEAN; }
 
 "men"           { return ENDLINE; }
 "mano"          { return ENDLINE; }
@@ -46,30 +49,29 @@ void yyerror(const char *s);
 "bro"           { return ENDLINE; }
 "vei"           { return ENDLINE; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { 
-    yylval.iden = strdup(yytext); 
-    return IDENTIFIER; 
+[ \t\r\n]+      ;
+
+"#".*           ;
+
+[a-zA-Z_][a-zA-Z0-9_]* {
+    yylval.iden = strdup(yytext);
+    return IDENTIFIER;
 }
 
-[0-9]+          { 
-    yylval.number = atoi(yytext); 
-    return NUMBER; 
+[0-9]+          {
+    yylval.number = atoi(yytext);
+    return NUMBER;
 }
 
 "("             { return LPAREN; }
 ")"             { return RPAREN; }
 
-[ \t\n]         ;
-
-"#".*           ;
-
-.               { 
-    printf("Caractere desconhecido: %c\n", *yytext); 
-    return ERROR; 
+.               {
+    printf("Caractere desconhecido: %c\n", *yytext);
+    return ERROR;
 }
 
 %%
 
-int yywrap() {
-    return 1;
-}
+int yywrap() { return 1; }
+

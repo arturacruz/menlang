@@ -3,7 +3,7 @@ pub fn filter(query: String) -> String {
     let mut in_comment = false;
     for i in 0..query.len() {
 
-        if query.get(i..=i) == Some(";") {
+        if query.get(i..=i) == Some("#") {
             in_comment = true;
         }
 

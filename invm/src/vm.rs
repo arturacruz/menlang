@@ -268,7 +268,14 @@ impl VM {
         let val = self.expect_reference(&reg);
         match t {
             Type::Int => println!("{val}"),
-            Type::Bool => println!("{}", val != 0),
+            Type::Bool => {
+                let p = if val == 0 {
+                    "bizarro"
+                } else {
+                    "certeza"
+                };
+                println!("{}", p);
+            }
             Type::Char => println!("{}", (val % 256) as u8 as char),
             Type::Str => println!("{}", self.stack.get_str(val as u16))
         }

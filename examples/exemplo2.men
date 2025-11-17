@@ -1,0 +1,14 @@
+literal x eh 4 men
+literalmente i eh 0 men
+grind enquanto i menor que x
+    puts i men
+    puts i vezes 2 men
+    i win men   
+ne
+
+se x identico a 4 ent
+    x win men
+ne
+
+po x men
+puts depende men
